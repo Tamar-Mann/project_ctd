@@ -95,7 +95,7 @@ public class PieceFactory implements PieceFactoryInterface {
                 GraphicsInterface gfx = gfxFactory.load(spritesPath, gfxCfg.toMap(),
                         new int[] { cellPx.width, cellPx.height });
                 Moves.Pair dummyStart = new Moves.Pair(0, 0); // אם אין לך מיקום התחלתי אמיתי
-                PhysicsInterface phys = physFactory.create(dummyStart, name.toString(), cfg);
+                PhysicsInterface phys = physFactory.create(dummyStart, name.toString(), physCfg);
 
                 StateInterface st = new State(moves, gfx, phys);
 

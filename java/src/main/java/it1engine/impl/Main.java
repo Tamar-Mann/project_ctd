@@ -32,49 +32,49 @@ public class Main {
             ImgInterface baseImage,
             CursorPositionManager cursorManager) {
 
-        long startMs = System.currentTimeMillis();
+        long startNs = System.nanoTime();
+
         for (PieceInterface p : pieces.values())
             p.reset(0);
 
         while (true) {
-            long now = System.currentTimeMillis() - startMs;
+            int nowMs = (int) ((System.nanoTime() - startNs) / 1_000_000);
 
-            // 1. עדכון פיזיקה
-            for (PieceInterface p : pieces.values())
-                p.update((int) now);
-
-            // 2. עיבוד פקודות מהתור
+            // עיבוד פקודות
             CommandInterface cmd;
             while ((cmd = commandQueue.poll()) != null) {
-                dispatcher.dispatch(cmd, baseImage, now);
+                dispatcher.dispatch(cmd, baseImage, nowMs);
             }
 
-            // 3. יצירת קנבס חדש עם רקע
-            ImgInterface canvas = baseImage.clone();
+            // עדכון כל הכלים
+            for (PieceInterface p : pieces.values())
+                p.update(nowMs);
 
-            // 4. ציור הכלים
+            // ציור מחודש של הקנבס
+            ImgInterface imgCanvas = baseImage.clone();
+
+            // ציור כל הכלים לפי מצב נוכחי
             for (PieceInterface p : pieces.values()) {
-                p.getState().getGraphics().update(now);
-
-                p.drawOnBoard(canvas, board, (int) now);
+                p.drawOnBoard(imgCanvas, board, nowMs);
             }
 
-            // 5. ציור הקרוסורים
+            // ציור קורסורים
             for (String playerId : List.of("P1", "P2")) {
                 int[] pos = cursorManager.getCursor(playerId);
                 Color color = playerId.equals("P1") ? new Color(0, 0, 255, 100) : new Color(0, 255, 0, 100);
                 int x = pos[1] * board.getCellWPix();
                 int y = pos[0] * board.getCellHPix();
-                ((Img) canvas).getBufferedImage().getGraphics().setColor(color);
-                ((Img) canvas).getBufferedImage().getGraphics().fillRect(x, y, board.getCellWPix(),
-                        board.getCellHPix());
+                Graphics2D g = ((Img) imgCanvas).getBufferedImage().createGraphics();
+                g.setColor(color);
+                g.fillRect(x, y, board.getCellWPix(), board.getCellHPix());
+                g.dispose();
             }
 
-            board.setImg(canvas);
+            board.setImg(imgCanvas);
             board.repaint();
 
             try {
-                Thread.sleep(1000 / 30); // 30 FPS
+                Thread.sleep(1000 / 30);
             } catch (InterruptedException e) {
                 break;
             }
@@ -83,32 +83,26 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        System.out.println("Loading board background image...");
         ImgInterface img = new Img().read("board.png");
         Board board = new Board(100, 100, 0, 0, 8, 8, img);
 
-        System.out.println("Initializing PieceFactory...");
         PieceFactory factory = new PieceFactory(board);
         URL resourceUrl = Main.class.getClassLoader().getResource("pieces");
         if (resourceUrl == null)
             throw new IllegalStateException("Resource folder 'pieces' not found");
         Path baseFolder = Paths.get(resourceUrl.toURI());
 
-        System.out.println("Generating piece library...");
         factory.generateLibrary(baseFolder);
 
         Map<String, PieceInterface> pieces = new HashMap<>();
-        System.out.println("Placing pieces on the board...");
         for (Map.Entry<String, int[]> entry : getBoardPieceLocations().entrySet()) {
             String pieceId = entry.getKey();
             int[] pos = entry.getValue();
             String type = pieceId.split("_")[0];
 
-            System.out.println("Creating piece: " + pieceId + " at position [" + pos[0] + ", " + pos[1] + "]");
             Moves.Pair cell = new Moves.Pair(pos[0], pos[1]);
             PieceInterface piece = factory.createPiece(pieceId, cell);
 
-            System.out.println("Sending IDLE command to initialize physics and graphics for piece: " + pieceId);
             CommandInterface cmd = new Command(0, pieceId, CommandType.IDLE, List.of(cell));
             piece.onCommand(cmd, new HashMap<>(), 0);
 

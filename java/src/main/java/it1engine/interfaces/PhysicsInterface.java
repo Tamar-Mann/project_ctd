@@ -16,7 +16,8 @@ public interface PhysicsInterface {
     /**
      * Update physics state based on current time (in ms).
      */
-    CommandInterface update(CommandInterface cmd, long nowMs);
+    // CommandInterface update(CommandInterface cmd, long nowMs);
+    void update(int nowMs);
 
     boolean isMovementBlocker();
 

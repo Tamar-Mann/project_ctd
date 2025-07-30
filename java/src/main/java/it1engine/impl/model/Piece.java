@@ -22,112 +22,71 @@ public class Piece implements PieceInterface {
     private StateInterface state;
     private Long lastActionTime; // זמן הפעולה האחרון
 
-    /**
-     * Initialize a piece with ID and initial state.
-     */
     public Piece(String pieceId, StateInterface initState) {
         this.pieceId = pieceId;
         this.state = initState;
     }
 
-    /**
-     * Handle a command for this piece.
-     */
     @Override
     public StateInterface onCommand(CommandInterface cmd, Map<Moves.Pair, List<Piece>> cell2piece, long now) {
         System.out.println("[PIECE] " + pieceId + " received command: " + cmd.getType());
 
-        // שלב 1: אם זו פקודת MOVE ללא פרמטרים (השלמה אוטומטית)
         if (cmd.getType().equals(CommandType.MOVE) && cmd.getParams().isEmpty()) {
             Moves.Pair end = state.getPhysics().getEndCell();
             setPosition(new int[] { end.r, end.c });
-
             CommandInterface idleCmd = new Command((int) now, pieceId, CommandType.IDLE, List.of(end));
             return this.onCommand(idleCmd, cell2piece, now);
         }
 
-        // שלב 2: חיפוש מצב יעד לפי סוג הפקודה
-        String key = cmd.getType().toString().toLowerCase(); // ← לתיאום עם transition map
+        String key = cmd.getType().toString().toLowerCase();
         StateInterface next = state.getTransitions().get(key);
         if (next == null) {
             System.out.println("[PIECE] No transition defined for: " + key);
             return state;
         }
 
-        // שלב 3: אתחול הפיזיקה ו־סטייט חדש
-        next.reset(cmd);
         next.setCommand(cmd);
-        next.getPhysics().reset(cmd);
-
         this.state = next;
 
         System.out.println("[PIECE] " + pieceId + " transitioned to state: " + next.getType().name().toLowerCase());
         return next;
     }
 
-    // if (isCommandPossible(cmd)) {
-    // this.state = this.state.processCommand(cmd, nowMs);
-    // }
-    // }
-
-    /**
-     * Reset the piece to idle state.
-     */
     @Override
     public void reset(int startMs) {
         if (this.state.getCommand() != null)
             this.state.reset(this.state.getCommand());
     }
 
-    /**
-     * Update the piece state based on current time.
-     */
     public void update(int now) {
-        System.out.println("[PIECE] Updating piece: " + this.pieceId + " at position: ["
-                + this.state.getPhysics().getPos()[0] + ", " + this.state.getPhysics().getPos()[1] + "]");
-        CommandInterface endCmd = state.getPhysics().update(this.getState().getCommand(), now);
-        if (endCmd != null) {
-            onCommand(endCmd, null, now); // ← מפעיל MOVE ריק
-        }
-
-        state.getGraphics().update(now);
+        System.out.println("[PIECE] Updating piece: " + this.pieceId);
+        state.update(now);
     }
 
     public void drawOnBoard(ImgInterface targetImg, BoardInterface board, int nowMs) {
-        int[] cell = this.state.getPhysics().getPos(); // [row, col]
+        int[] cell = this.state.getPhysics().getPos();
         int wPix = board.getCellWPix();
         int hPix = board.getCellHPix();
         ImgInterface sprite = this.state.getCurrentSprite(nowMs);
 
-        // השתמש בגודל התא המדויק (100% מגודל התא)
-        int pieceWidth = wPix;
-        int pieceHeight = hPix;
-
-        // מיקום מדויק בתוך התא (בלי padding נוסף כי הBoard כבר מוסיף padding)
         int x = cell[1] * wPix;
         int y = cell[0] * hPix;
 
-        System.out.println("Drawing piece " + pieceId + " at cell [" + cell[0] + ", " + cell[1] + "] -> pixel [" + x
-                + ", " + y + "] (no additional padding)");
+        System.out.println("Drawing piece " + pieceId + " at cell [" + cell[0] + ", " + cell[1] + "] -> pixel [" + x + ", " + y + "]");
 
-        // בדיקה מיוחדת לכלים לבנים
         if (pieceId.contains("W")) {
             System.out.println("  *** WHITE PIECE: " + pieceId + " at [" + x + ", " + y + "] ***");
         }
 
-        // צור עותק של הספרייט בגודל הנכון
         if (sprite instanceof Img) {
             Img spriteImg = (Img) sprite;
             BufferedImage originalSprite = spriteImg.getBufferedImage();
-
-            // שנה גודל לגודל התא המדויק
-            Image scaledSprite = originalSprite.getScaledInstance(pieceWidth, pieceHeight, Image.SCALE_SMOOTH);
-            BufferedImage resizedSprite = new BufferedImage(pieceWidth, pieceHeight, BufferedImage.TYPE_INT_ARGB);
+            Image scaledSprite = originalSprite.getScaledInstance(wPix, hPix, Image.SCALE_SMOOTH);
+            BufferedImage resizedSprite = new BufferedImage(wPix, hPix, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2 = resizedSprite.createGraphics();
             g2.drawImage(scaledSprite, 0, 0, null);
             g2.dispose();
 
-            // צייר את הספרייט המוקטן
             Graphics2D g = targetImg.getBufferedImage().createGraphics();
             g.setComposite(AlphaComposite.SrcOver);
             g.drawImage(resizedSprite, x, y, null);
@@ -167,14 +126,4 @@ public class Piece implements PieceInterface {
     public void setLastActionTime(long time) {
         this.lastActionTime = time;
     }
-
-    /**
-     * Check if command is possible for this piece.
-     */
-    private boolean isCommandPossible(CommandInterface cmd) {
-        // TODO: Implement
-        // implement!!
-        return state.canTransition(0);
-    }
-
 }

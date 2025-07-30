@@ -3,11 +3,10 @@ package it1engine.impl.model.physics;
 import it1engine.impl.model.Moves;
 import it1engine.interfaces.BoardInterface;
 import it1engine.interfaces.PhysicsInterface;
+import it1engine.interfaces.StateInterface;
+import it1engine.interfaces.StateMachineInterface;
 import it1engine.interfaces.command.CommandInterface;
 
-/**
- * AbstractPhysics – base class for all physics types.
- */
 public abstract class AbstractPhysics implements PhysicsInterface {
 
     protected final BoardInterface board;
@@ -19,24 +18,50 @@ public abstract class AbstractPhysics implements PhysicsInterface {
 
     protected double param; // speed or duration (depends on subtype)
 
+    // תוספות נחוצות לתזוזה בפועל
+    protected Moves.Pair cell; // מיקום התא הנוכחי
+    protected double[] startPos;
+    protected double[] endPos;
+    protected double[] movementVec;
+    protected double durationSec;
+
+    protected StateInterface currState;
+    protected StateMachineInterface stateMachine;
+
     public AbstractPhysics(BoardInterface board, double param) {
         this.board = board;
         this.param = param;
     }
 
-    // --- abstract methods ---
     @Override
-    public void reset(CommandInterface cmd)
-    {
-        System.out.println("[DEBUG] RESET Physics called for state: " + this.getClass().getSimpleName() + " pos=" + startCell);
-
+    public void reset(CommandInterface cmd) {
+        System.out.println(
+                "[DEBUG] RESET Physics called for state: " + this.getClass().getSimpleName() + " pos=" + startCell);
     }
-    
 
     @Override
-    public abstract CommandInterface update(CommandInterface cmd, long nowMs);
+    public void update(int nowMs) {
+        if (startCell == null || endCell == null || currPosM == null)
+            return;
 
-    // --- default behaviors ---
+        double elapsedSec = (nowMs - startMs) / 1000.0;
+        double progress = elapsedSec / durationSec;
+        if (progress > 1.0)
+            progress = 1.0;
+
+        currPosM = new double[] {
+                startPos[0] + movementVec[0] * progress,
+                startPos[1] + movementVec[1] * progress
+        };
+
+        if (progress >= 1.0) {
+            currPosM = endPos;
+            cell = endCell;
+            // הגרפיקה תאופס כבר על ידי סטייט חיצוני או תשאיר סטייט אחרון
+            System.out.println("[PHYSICS] Movement complete for: " + this.getClass().getSimpleName());
+        }
+    }
+
     @Override
     public int[] getPos() {
         if (currPosM == null) {
@@ -44,12 +69,8 @@ public abstract class AbstractPhysics implements PhysicsInterface {
             return new int[] { 0, 0 };
         }
 
-        // המר את currPosM חזרה לתאים
         Moves.Pair cell = board.mToCell(currPosM);
-        return new int[] {
-                cell.r, // row
-                cell.c // col
-        };
+        return new int[] { cell.r, cell.c };
     }
 
     @Override
@@ -67,7 +88,7 @@ public abstract class AbstractPhysics implements PhysicsInterface {
         return false;
     }
 
-    // --- getters/setters if needed ---
+    // --- Setters/Getters ---
     public Moves.Pair getStartCell() {
         return startCell;
     }
@@ -96,6 +117,7 @@ public abstract class AbstractPhysics implements PhysicsInterface {
     public void setPos(double[] currPosM) {
         this.currPosM = currPosM;
     }
+
     public void setStartCell(Moves.Pair startCell) {
         this.startCell = startCell;
     }
@@ -104,4 +126,27 @@ public abstract class AbstractPhysics implements PhysicsInterface {
         this.currPosM = currPosM;
     }
 
+    public void setStartPos(double[] startPos) {
+        this.startPos = startPos;
+    }
+
+    public void setEndPos(double[] endPos) {
+        this.endPos = endPos;
+    }
+
+    public void setMovementVec(double[] movementVec) {
+        this.movementVec = movementVec;
+    }
+
+    public void setDurationSec(double durationSec) {
+        this.durationSec = durationSec;
+    }
+
+    public void setCurrState(StateInterface currState) {
+        this.currState = currState;
+    }
+
+    public void setStateMachine(StateMachineInterface stateMachine) {
+        this.stateMachine = stateMachine;
+    }
 }

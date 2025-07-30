@@ -29,11 +29,11 @@ public class IdlePhysics extends AbstractPhysics {
         System.out.println("[IdlePhysics] startCell=" + startCell + " currPosM=" + java.util.Arrays.toString(currPosM));
     }
 
-    @Override
-    public CommandInterface update(CommandInterface cmd, long nowMs) {
-        // Idle – אין שינוי, אין פקודה חדשה
-        return null;
-    }
+    // @Override
+    // public CommandInterface update(CommandInterface cmd, long nowMs) {
+    //     // Idle – אין שינוי, אין פקודה חדשה
+    //     return null;
+    // }
 
     @Override
     public boolean canCapture() {

@@ -39,9 +39,9 @@ public class MoveCommandListener implements CommandListenerInterface {
 
             // piece.drawOnBoard(canvas, board, (int) now);
 
-            int[] pos = cursorManager.getCursor(cmd.getPieceId());
-            int x = pos[1] * board.getCellWPix();
-            int y = pos[0] * board.getCellHPix();
+            // int[] pos = cursorManager.getCursor(cmd.getPieceId());
+            // int x = pos[1] * board.getCellWPix();
+            // int y = pos[0] * board.getCellHPix();
 
             // Graphics2D g = ((Img) canvas).getBufferedImage().createGraphics();
             // Color color = cmd.getPieceId().equals("P1") ? new Color(0, 0, 255, 100) : new Color(0, 255, 0, 100);

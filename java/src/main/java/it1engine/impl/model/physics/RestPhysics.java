@@ -25,15 +25,16 @@ public class RestPhysics extends AbstractPhysics {
         this.startCell = (Moves.Pair) cmd.getParams().get(0);
         this.currPosM = board.cellToM(startCell);
         this.startMs = cmd.getTimestamp();
+        this.startPos = currPosM;
+        this.endPos = currPosM;
     }
 
     @Override
-    public CommandInterface update(CommandInterface cmd, long nowMs) {
+    public void update(int nowMs) {
         double elapsed = (nowMs - startMs) / 1000.0;
         if (elapsed >= durationSec) {
-            return new Command((int)nowMs, cmd.getPieceId(), CommandType.REST, List.of());
+            System.out.println("[PHYSICS] Rest complete for: " + this.getClass().getSimpleName());
         }
-        return null;
     }
 
     @Override
