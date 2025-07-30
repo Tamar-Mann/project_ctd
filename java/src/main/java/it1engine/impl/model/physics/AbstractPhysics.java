@@ -26,7 +26,12 @@ public abstract class AbstractPhysics implements PhysicsInterface {
 
     // --- abstract methods ---
     @Override
-    public abstract void reset(CommandInterface cmd);
+    public void reset(CommandInterface cmd)
+    {
+        System.out.println("[DEBUG] RESET Physics called for state: " + this.getClass().getSimpleName() + " pos=" + startCell);
+
+    }
+    
 
     @Override
     public abstract CommandInterface update(CommandInterface cmd, long nowMs);

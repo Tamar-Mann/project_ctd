@@ -34,7 +34,9 @@ public class MoveCommandListener implements CommandListenerInterface {
         PieceInterface piece = pieces.get(cmd.getPieceId());
         if (piece != null) {
             piece.onCommand(cmd, null, now);
-            System.out.println("hiiiiiiiiiiiiiiiiiiiiiiiiii");
+            
+            System.out.println("Handling MOVE for " + cmd.getPieceId());
+
             // piece.drawOnBoard(canvas, board, (int) now);
 
             int[] pos = cursorManager.getCursor(cmd.getPieceId());

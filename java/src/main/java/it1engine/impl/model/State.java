@@ -142,8 +142,14 @@ public class State implements StateInterface {
     }
 
     @Override
-    public void setCommand(CommandInterface cmd)
-    {
+    public void setCommand(CommandInterface cmd) {
         this.command = cmd;
+        if (physics == null) {
+            System.out.println("[DEBUG] physics is NULL inside setCommand for state: " + type.name());
+        } else {
+            physics.reset(cmd);
+            System.out.println("[DEBUG] physics.reset(cmd) CALLED for state: " + type.name());
+        }
     }
+
 }

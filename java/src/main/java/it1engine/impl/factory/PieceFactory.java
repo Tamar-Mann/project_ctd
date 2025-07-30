@@ -94,9 +94,11 @@ public class PieceFactory implements PieceFactoryInterface {
                 Path spritesPath = stateDir.resolve("sprites");
                 GraphicsInterface gfx = gfxFactory.load(spritesPath, gfxCfg.toMap(),
                         new int[] { cellPx.width, cellPx.height });
-                PhysicsInterface phys = null;
+                Moves.Pair dummyStart = new Moves.Pair(0, 0); // אם אין לך מיקום התחלתי אמיתי
+                PhysicsInterface phys = physFactory.create(dummyStart, name.toString(), cfg);
 
                 StateInterface st = new State(moves, gfx, phys);
+
                 configByState.put(st, cfg);
                 st.setType(name);
                 states.put(name, st);
@@ -117,8 +119,9 @@ public class PieceFactory implements PieceFactoryInterface {
                 String from = parts[0].trim();
                 String event = parts[1].trim().toLowerCase();
                 String to = parts[2].trim();
-                StateInterface src = states.get(from);
-                StateInterface dst = states.get(to);
+                StateInterface src = states.get(StateType.valueOf(from.toUpperCase()));
+                StateInterface dst = states.get(StateType.valueOf(to.toUpperCase()));
+
                 if (src != null && dst != null) {
                     src.setTransition(event, dst);
                 }
@@ -166,6 +169,9 @@ public class PieceFactory implements PieceFactoryInterface {
         // הכנת פקודת התחלה
         Command cmd = new Command(0, piece.getPieceId(), CommandType.IDLE, List.of(cell));
         idleClone.reset(cmd); // ← קודם נותנים לפקודת מצב
+        for (StateInterface st : templates.values()) {
+            st.getPhysics().reset(cmd);
+        }
 
         piece.reset(0); // ← אחר כך מריצים reset של הכלי
 
@@ -185,6 +191,9 @@ public class PieceFactory implements PieceFactoryInterface {
             // יצירת physics חדש עם המיקום הנכון
             PhysicsInterface newPhys = physFactory.create(cell, orig.getType().name(),
                     configByState.getOrDefault(orig, new JSONObject()));
+
+            Command dummyCmd = new Command(0, "dummy", CommandType.IDLE, List.of(cell, cell));
+            newPhys.reset(dummyCmd);
 
             // ...existing code...
             // יצירת עותק של הסטייט עם המיקום החדש

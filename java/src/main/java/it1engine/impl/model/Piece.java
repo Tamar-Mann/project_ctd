@@ -37,31 +37,31 @@ public class Piece implements PieceInterface {
     public StateInterface onCommand(CommandInterface cmd, Map<Moves.Pair, List<Piece>> cell2piece, long now) {
         System.out.println("[PIECE] " + pieceId + " received command: " + cmd.getType());
 
-        // שלב 1: טיפול ב-MOVE ריק (תנועה שהסתיימה)
+        // שלב 1: אם זו פקודת MOVE ללא פרמטרים (השלמה אוטומטית)
         if (cmd.getType().equals(CommandType.MOVE) && cmd.getParams().isEmpty()) {
-            // עדכון מיקום לתא סופי
             Moves.Pair end = state.getPhysics().getEndCell();
             setPosition(new int[] { end.r, end.c });
 
-            // שלח פקודת IDLE אוטומטית
-            CommandInterface idleCmd = new Command((int)now, pieceId, CommandType.IDLE, List.of(end));
+            CommandInterface idleCmd = new Command((int) now, pieceId, CommandType.IDLE, List.of(end));
             return this.onCommand(idleCmd, cell2piece, now);
         }
 
-        // שלב 2: מעבר למצב הבא לפי מכונת המצבים
-        String key = cmd.getType().toLowerCase();
+        // שלב 2: חיפוש מצב יעד לפי סוג הפקודה
+        String key = cmd.getType().toString().toLowerCase(); // ← לתיאום עם transition map
         StateInterface next = state.getTransitions().get(key);
         if (next == null) {
             System.out.println("[PIECE] No transition defined for: " + key);
             return state;
         }
 
-        // שלב 3: ביצוע מעבר: reset ו־setCommand
+        // שלב 3: אתחול הפיזיקה ו־סטייט חדש
         next.reset(cmd);
-        next.setCommand(cmd); // ← ודא שמחלקת State תומכת בזה
+        next.setCommand(cmd);
+        next.getPhysics().reset(cmd);
+
         this.state = next;
 
-        System.out.println("[PIECE] " + pieceId + " transitioned to state: " + key);
+        System.out.println("[PIECE] " + pieceId + " transitioned to state: " + next.getType().name().toLowerCase());
         return next;
     }
 
@@ -83,7 +83,8 @@ public class Piece implements PieceInterface {
      * Update the piece state based on current time.
      */
     public void update(int now) {
-        System.out.println("[PIECE] Updating piece: " + this.pieceId + " at position: [" + this.state.getPhysics().getPos()[0] + ", " + this.state.getPhysics().getPos()[1] + "]");
+        System.out.println("[PIECE] Updating piece: " + this.pieceId + " at position: ["
+                + this.state.getPhysics().getPos()[0] + ", " + this.state.getPhysics().getPos()[1] + "]");
         CommandInterface endCmd = state.getPhysics().update(this.getState().getCommand(), now);
         if (endCmd != null) {
             onCommand(endCmd, null, now); // ← מפעיל MOVE ריק

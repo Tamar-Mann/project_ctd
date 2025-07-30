@@ -14,7 +14,8 @@ public class CommandProducer implements CommandProducerInterface {
 
     @Override
     public CommandInterface createMoveCommand(String pieceId, Moves.Pair from, Moves.Pair to, int timestamp) {
-        return new Command(timestamp, pieceId, CommandType.MOVE, List.of(from, to));
+        CommandInterface moveCmd = new Command(timestamp, pieceId, CommandType.MOVE, List.of(from, to));
+        return moveCmd;
     }
 
     @Override
