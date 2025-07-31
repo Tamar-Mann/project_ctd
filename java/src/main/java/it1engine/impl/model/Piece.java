@@ -69,13 +69,15 @@ public class Piece implements PieceInterface {
         int hPix = board.getCellHPix();
         ImgInterface sprite = this.state.getCurrentSprite(nowMs);
 
-        int x = cell[1] * wPix;
-        int y = cell[0] * hPix;
+        double[] posM = this.state.getPhysics().getCurrPosM();
+        int xPix = (int) posM[0];
+        int yPix = (int) posM[1];
 
-        System.out.println("Drawing piece " + pieceId + " at cell [" + cell[0] + ", " + cell[1] + "] -> pixel [" + x + ", " + y + "]");
+        System.out.println("Drawing piece " + pieceId + " at cell [" + cell[0] + ", " + cell[1] + "] -> pixel [" + xPix
+                + ", " + yPix + "]");
 
         if (pieceId.contains("W")) {
-            System.out.println("  *** WHITE PIECE: " + pieceId + " at [" + x + ", " + y + "] ***");
+            System.out.println("  *** WHITE PIECE: " + pieceId + " at [" + xPix + ", " + yPix + "] ***");
         }
 
         if (sprite instanceof Img) {
@@ -89,7 +91,7 @@ public class Piece implements PieceInterface {
 
             Graphics2D g = targetImg.getBufferedImage().createGraphics();
             g.setComposite(AlphaComposite.SrcOver);
-            g.drawImage(resizedSprite, x, y, null);
+            g.drawImage(resizedSprite, xPix, yPix, null);
             g.dispose();
         }
     }

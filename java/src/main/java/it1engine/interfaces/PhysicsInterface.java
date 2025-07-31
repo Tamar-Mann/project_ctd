@@ -20,6 +20,7 @@ public interface PhysicsInterface {
     void update(int nowMs);
 
     boolean isMovementBlocker();
+    double[] getCurrPosM();
 
     /**
      * Whether this piece can be captured.

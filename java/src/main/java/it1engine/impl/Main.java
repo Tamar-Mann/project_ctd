@@ -38,7 +38,7 @@ public class Main {
             p.reset(0);
 
         while (true) {
-            int nowMs = (int) ((System.nanoTime() - startNs) / 1_000_000);
+            int nowMs = (int) ((System.nanoTime() - startNs) / 1_000_000); // זמן שחלף מאז ההתחלה במילישניות
 
             // עיבוד פקודות
             CommandInterface cmd;
@@ -47,15 +47,17 @@ public class Main {
             }
 
             // עדכון כל הכלים
-            for (PieceInterface p : pieces.values())
-                p.update(nowMs);
+            // for (PieceInterface p : pieces.values())
 
             // ציור מחודש של הקנבס
             ImgInterface imgCanvas = baseImage.clone();
 
             // ציור כל הכלים לפי מצב נוכחי
             for (PieceInterface p : pieces.values()) {
+                p.update(nowMs);
+
                 p.drawOnBoard(imgCanvas, board, nowMs);
+
             }
 
             // ציור קורסורים

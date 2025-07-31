@@ -1,5 +1,7 @@
 package it1engine.impl.model.physics;
 
+import java.util.Arrays;
+
 import it1engine.impl.model.Moves;
 import it1engine.interfaces.BoardInterface;
 import it1engine.interfaces.PhysicsInterface;
@@ -10,6 +12,7 @@ import it1engine.interfaces.command.CommandInterface;
 public abstract class AbstractPhysics implements PhysicsInterface {
 
     protected final BoardInterface board;
+    protected boolean finished = false;
 
     protected Moves.Pair startCell;
     protected Moves.Pair endCell;
@@ -35,12 +38,19 @@ public abstract class AbstractPhysics implements PhysicsInterface {
 
     @Override
     public void reset(CommandInterface cmd) {
+        finished = false;
         System.out.println(
                 "[DEBUG] RESET Physics called for state: " + this.getClass().getSimpleName() + " pos=" + startCell);
     }
 
     @Override
     public void update(int nowMs) {
+
+        if (nowMs < startMs) {
+            System.out.println("[PHYSICS] nowMs < startMs, skipping frame");
+            return;
+        }
+
         if (startCell == null || endCell == null || currPosM == null)
             return;
 
@@ -54,12 +64,22 @@ public abstract class AbstractPhysics implements PhysicsInterface {
                 startPos[1] + movementVec[1] * progress
         };
 
-        if (progress >= 1.0) {
+        if (progress >= 1.0 && !finished) {
             currPosM = endPos;
             cell = endCell;
-            // הגרפיקה תאופס כבר על ידי סטייט חיצוני או תשאיר סטייט אחרון
+            finished = true;
             System.out.println("[PHYSICS] Movement complete for: " + this.getClass().getSimpleName());
         }
+    }
+
+    // isfinished...
+    public boolean isFinished() {
+        return currPosM != null && Arrays.equals(currPosM, endPos);
+    }
+
+    @Override
+    public double[] getCurrPosM() {
+        return currPosM;
     }
 
     @Override
@@ -97,9 +117,9 @@ public abstract class AbstractPhysics implements PhysicsInterface {
         return endCell;
     }
 
-    public double[] getCurrPosM() {
-        return currPosM;
-    }
+    // public double[] getCurrPosM() {
+    // return currPosM;
+    // }
 
     public long getStartMs() {
         return startMs;
